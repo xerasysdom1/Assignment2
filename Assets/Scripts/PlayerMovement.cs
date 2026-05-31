@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -10,6 +11,11 @@ public class PlayerMovement : MonoBehaviour
     float jumpForce = 7f;
     int jumpsRemaining;
     int maxJumps = 2;
+    int score;
+    bool hasWon = false;
+    bool hasLost = false;
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI winText;
 
     SpriteRenderer spriteRenderer;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -18,6 +24,9 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         jumpsRemaining = maxJumps;
+        score = 0;
+        scoreText.text = "Score:0/3";
+        winText.gameObject.SetActive(false); // Hide win text at the start
     }
 
     // Update is called once per frame
@@ -47,6 +56,16 @@ public class PlayerMovement : MonoBehaviour
         {
             spriteRenderer.flipX = false;
         }
+        if (hasWon && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            Time.timeScale = 1f;
+            RestartLevel();
+        }
+        if (hasLost && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            Time.timeScale = 1f;
+            RestartLevel();
+        }
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -61,17 +80,57 @@ public class PlayerMovement : MonoBehaviour
     {
         if (other.CompareTag("Water"))
         {
-            RestartLevel();
+            LoseGame();
+             // RestartLevel();
         }
-        if (other.CompareTag("Goal"))
+        if (other.CompareTag("Goal")) // Assuming you need to collect at least 3 items to win
         {
-            Debug.Log("Level Complete!");
+            if (score >= 3)
+            {
+                WinGame();
+            }
+            else
+            {
+                scoreText.text = "Score:" + score + "/3 - Collect more items to win!";
+            }
             // You can add code here to load the next level or show a victory screen
         }
-        if(other.CompareTag("Enemy"))
+        if (other.CompareTag("Enemy"))
         {
-            RestartLevel();
+            LoseGame();
+            // RestartLevel();
         }
+        if (other.CompareTag("Collect"))
+        {
+            Destroy(other.gameObject); // Remove the collectible from the scene
+            score++;
+            scoreText.text = "Score:" + score + "/3"; // Update the score display
+        }
+        
+
+    }
+    void WinGame()
+    {
+        hasWon = true;
+
+        Time.timeScale = 0f;
+
+        winText.gameObject.SetActive(true);
+        winText.text = "You Win!";
+
+        scoreText.text = "Press Space to restart";
+    }
+    void LoseGame()
+    {
+        hasWon = false;
+        hasLost = true;
+
+        Time.timeScale = 0f;
+
+        winText.gameObject.SetActive(true);
+        winText.text = "You Lose!";
+
+        scoreText.text = "Press Space to restart";
     }
     
     void RestartLevel()

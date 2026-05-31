@@ -8,6 +8,7 @@ TagManager:
   - Water
   - Goal
   - Enemy
+  - Collect
   layers:
   - Default
   - TransparentFX
